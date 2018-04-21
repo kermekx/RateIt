@@ -22,7 +22,9 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.pai.rateit.R;
+import com.pai.rateit.model.store.Store;
 
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
@@ -38,7 +40,15 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
 
     public static String FRAGMENT_TAG = "MapsFragment";
     public static int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 411;
-
+    private static Store[] starbucks = new Store[]{
+            new Store("Starbucks Coffee", "v2", 50.6188188, 3.129931),
+            new Store("Starbucks Coffee", "CC Euralille", 50.6379416, 3.0645935),
+            new Store("Starbucks Coffee", "Lille - Esquermoise", 50.6382841, 3.0583568),
+            new Store("Starbucks Coffee", "CC ENGLOS", 50.62806, 2.9551882),
+            new Store("Starbucks Coffee", "Gent sint Pieters Station", 51.0360369, 3.7091429),
+            new Store("Starbucks Coffee", "Gent Korenmarkt", 51.0548546, 3.7201253),
+            new Store("Starbucks Coffee", "Bruges Railway Station", 51.1970962, 3.2156253),
+    };
     SupportMapFragment mapFragment;
     private Unbinder unbinder;
     private OnFragmentInteractionListener mListener;
@@ -141,6 +151,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
             }
         }
 
+        testDrawPoints();
 
     }
 
@@ -179,6 +190,12 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
 
             mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(userPos.getLatitude(), userPos.getLongitude())));
             mMap.moveCamera(CameraUpdateFactory.zoomTo(15));
+        }
+    }
+
+    private void testDrawPoints() {
+        for (Store store : starbucks) {
+            mMap.addMarker(new MarkerOptions().position(store.getLatLng()).title(store.getName()));
         }
     }
 
