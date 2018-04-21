@@ -25,6 +25,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.pai.rateit.R;
 import com.pai.rateit.model.store.Store;
+import com.pai.rateit.utils.DistanceUtils;
 
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
@@ -194,8 +195,26 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private void testDrawPoints() {
-        for (Store store : starbucks) {
-            mMap.addMarker(new MarkerOptions().position(store.getLatLng()).title(store.getName()));
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            for (Store store : starbucks) {
+                LocationManager locationManager = (LocationManager)
+                        getActivity().getSystemService(Context.LOCATION_SERVICE);
+                Criteria criteria = new Criteria();
+
+
+                Location userPos = locationManager.getLastKnownLocation(locationManager
+                        .getBestProvider(criteria, false));
+
+                LatLng userLatlng = new LatLng(userPos.getLatitude(), userPos.getLongitude());
+
+                mMap.addMarker(new MarkerOptions().position(store.getLatLng()).title(store.getName() + " " + store.getAddress()
+                        + " (" + DistanceUtils.metersToString(store.getLatLng(), userLatlng, getContext()) + ")"));
+            }
+        } else {
+            for (Store store : starbucks) {
+                mMap.addMarker(new MarkerOptions().position(store.getLatLng()).title(store.getName() + " " + store.getAddress()));
+            }
         }
     }
 

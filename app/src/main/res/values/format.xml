@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="meter_format">%d m</string>
+    <string name="kilometer_format">%.1f km</string>
+
+</resources>
