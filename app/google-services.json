@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "769360454366",
+    "firebase_url": "https://rate-it-1523908577542.firebaseio.com",
+    "project_id": "rate-it-1523908577542",
+    "storage_bucket": "rate-it-1523908577542.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:769360454366:android:9f1dc957259e5c76",
+        "android_client_info": {
+          "package_name": "com.pai.rateit"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "769360454366-ie2htdkd3aco5i8otpu4522p9pgt5m16.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pai.rateit",
+            "certificate_hash": "254171a5b76233b5cc35a8e5db4837739436bb8f"
+          }
+        },
+        {
+          "client_id": "769360454366-rqakcfqtkjdcd333haq7oportil3s4fp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjM5JphV4LimRkvW3GGhGFPQvmALnsLks"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "769360454366-rqakcfqtkjdcd333haq7oportil3s4fp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

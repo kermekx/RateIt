@@ -12,6 +12,7 @@ import android.support.annotation.RequiresPermission;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,9 +24,20 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.pai.rateit.R;
+import com.pai.rateit.mapper.store.StoreMapper;
 import com.pai.rateit.model.store.Store;
 import com.pai.rateit.utils.DistanceUtils;
+
+import java.util.Map;
 
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
@@ -41,15 +53,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
 
     public static String FRAGMENT_TAG = "MapsFragment";
     public static int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 411;
-    private static Store[] starbucks = new Store[]{
-            new Store("Starbucks Coffee", "v2", 50.6188188, 3.129931),
-            new Store("Starbucks Coffee", "CC Euralille", 50.6379416, 3.0645935),
-            new Store("Starbucks Coffee", "Lille - Esquermoise", 50.6382841, 3.0583568),
-            new Store("Starbucks Coffee", "CC ENGLOS", 50.62806, 2.9551882),
-            new Store("Starbucks Coffee", "Gent sint Pieters Station", 51.0360369, 3.7091429),
-            new Store("Starbucks Coffee", "Gent Korenmarkt", 51.0548546, 3.7201253),
-            new Store("Starbucks Coffee", "Bruges Railway Station", 51.1970962, 3.2156253),
-    };
+
     SupportMapFragment mapFragment;
     private Unbinder unbinder;
     private OnFragmentInteractionListener mListener;
@@ -197,24 +201,69 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
     private void testDrawPoints() {
         if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
-            for (Store store : starbucks) {
-                LocationManager locationManager = (LocationManager)
-                        getActivity().getSystemService(Context.LOCATION_SERVICE);
-                Criteria criteria = new Criteria();
 
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("testData")
+                    .get()
+                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if (task.isSuccessful()) {
+                                if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                                        == PackageManager.PERMISSION_GRANTED) {
+                                    for (QueryDocumentSnapshot document : task.getResult()) {
+                                        LocationManager locationManager = (LocationManager)
+                                                getActivity().getSystemService(Context.LOCATION_SERVICE);
+                                        Criteria criteria = new Criteria();
+                                        Store store = document.toObject(Store.class);
 
-                Location userPos = locationManager.getLastKnownLocation(locationManager
-                        .getBestProvider(criteria, false));
+                                        Location userPos = locationManager.getLastKnownLocation(locationManager
+                                                .getBestProvider(criteria, false));
 
-                LatLng userLatlng = new LatLng(userPos.getLatitude(), userPos.getLongitude());
+                                        LatLng userLatlng = new LatLng(userPos.getLatitude(), userPos.getLongitude());
 
-                mMap.addMarker(new MarkerOptions().position(store.getLatLng()).title(store.getName() + " " + store.getAddress()
-                        + " (" + DistanceUtils.metersToString(store.getLatLng(), userLatlng, getContext()) + ")"));
-            }
+                                        mMap.addMarker(new MarkerOptions().position(store.getLatLng()).title(store.getName() + " " + store.getAddress()
+                                                + " (" + DistanceUtils.metersToString(store.getLatLng(), userLatlng, getContext()) + ")"));
+                                    }
+                                }
+
+                            } else {
+                                Log.w("MapsFragment", "Error getting documents.", task.getException());
+                            }
+                        }
+                    });
+
         } else {
-            for (Store store : starbucks) {
-                mMap.addMarker(new MarkerOptions().position(store.getLatLng()).title(store.getName() + " " + store.getAddress()));
-            }
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("testData")
+                    .get()
+                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if (task.isSuccessful()) {
+                                if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                                        == PackageManager.PERMISSION_GRANTED) {
+                                    for (QueryDocumentSnapshot document : task.getResult()) {
+                                        LocationManager locationManager = (LocationManager)
+                                                getActivity().getSystemService(Context.LOCATION_SERVICE);
+                                        Criteria criteria = new Criteria();
+                                        Store store = document.toObject(Store.class);
+
+                                        Location userPos = locationManager.getLastKnownLocation(locationManager
+                                                .getBestProvider(criteria, false));
+
+                                        LatLng userLatlng = new LatLng(userPos.getLatitude(), userPos.getLongitude());
+
+                                        mMap.addMarker(new MarkerOptions().position(store.getLatLng()).title(store.getName() + " " + store.getAddress()
+                                                + " (" + DistanceUtils.metersToString(store.getLatLng(), userLatlng, getContext()) + ")"));
+                                    }
+                                }
+
+                            } else {
+                                Log.w("MapsFragment", "Error getting documents.", task.getException());
+                            }
+                        }
+                    });
         }
     }
 
