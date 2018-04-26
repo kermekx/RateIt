@@ -23,21 +23,13 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.pai.rateit.R;
-import com.pai.rateit.mapper.store.StoreMapper;
-import com.pai.rateit.model.store.Store;
-import com.pai.rateit.utils.DistanceUtils;
-
-import java.util.Map;
+import com.pai.rateit.factory.marker.MarkerFactory;
 
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
@@ -173,7 +165,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
                 }
             } else {
                 // Permission was denied. Display an error message.
-                // Add a marker in Sydney and move the camera
+                // Add a marker in Lille and move the camera
                 LatLng lille = new LatLng(51, 3);
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(lille));
                 mMap.moveCamera(CameraUpdateFactory.zoomTo(15));
@@ -209,24 +201,15 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
                         @Override
                         public void onComplete(@NonNull Task<QuerySnapshot> task) {
                             if (task.isSuccessful()) {
-                                if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                                        == PackageManager.PERMISSION_GRANTED) {
-                                    for (QueryDocumentSnapshot document : task.getResult()) {
-                                        LocationManager locationManager = (LocationManager)
-                                                getActivity().getSystemService(Context.LOCATION_SERVICE);
-                                        Criteria criteria = new Criteria();
-                                        Store store = document.toObject(Store.class);
+                                MarkerFactory markerFactory = new MarkerFactory()
+                                        .context(getContext())
+                                        .map(mMap)
+                                        .locationManager((LocationManager) getActivity()
+                                                .getSystemService(Context.LOCATION_SERVICE));
 
-                                        Location userPos = locationManager.getLastKnownLocation(locationManager
-                                                .getBestProvider(criteria, false));
-
-                                        LatLng userLatlng = new LatLng(userPos.getLatitude(), userPos.getLongitude());
-
-                                        mMap.addMarker(new MarkerOptions().position(store.getLatLng()).title(store.getName() + " " + store.getAddress()
-                                                + " (" + DistanceUtils.metersToString(store.getLatLng(), userLatlng, getContext()) + ")"));
-                                    }
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    markerFactory.mark(document);
                                 }
-
                             } else {
                                 Log.w("MapsFragment", "Error getting documents.", task.getException());
                             }
@@ -241,24 +224,15 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
                         @Override
                         public void onComplete(@NonNull Task<QuerySnapshot> task) {
                             if (task.isSuccessful()) {
-                                if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                                        == PackageManager.PERMISSION_GRANTED) {
-                                    for (QueryDocumentSnapshot document : task.getResult()) {
-                                        LocationManager locationManager = (LocationManager)
-                                                getActivity().getSystemService(Context.LOCATION_SERVICE);
-                                        Criteria criteria = new Criteria();
-                                        Store store = document.toObject(Store.class);
+                                MarkerFactory markerFactory = new MarkerFactory()
+                                        .context(getContext())
+                                        .map(mMap)
+                                        .locationManager((LocationManager) getActivity()
+                                                .getSystemService(Context.LOCATION_SERVICE));
 
-                                        Location userPos = locationManager.getLastKnownLocation(locationManager
-                                                .getBestProvider(criteria, false));
-
-                                        LatLng userLatlng = new LatLng(userPos.getLatitude(), userPos.getLongitude());
-
-                                        mMap.addMarker(new MarkerOptions().position(store.getLatLng()).title(store.getName() + " " + store.getAddress()
-                                                + " (" + DistanceUtils.metersToString(store.getLatLng(), userLatlng, getContext()) + ")"));
-                                    }
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    markerFactory.mark(document);
                                 }
-
                             } else {
                                 Log.w("MapsFragment", "Error getting documents.", task.getException());
                             }
