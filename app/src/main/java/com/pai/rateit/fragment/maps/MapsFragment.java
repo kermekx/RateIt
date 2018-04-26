@@ -31,6 +31,9 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.pai.rateit.R;
 import com.pai.rateit.factory.marker.MarkerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 

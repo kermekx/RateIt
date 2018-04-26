@@ -7,4 +7,10 @@
 
     <string name="action_settings">Settings</string>
     <string name="title_activity_maps">Map</string>
+    
+    <string name="allow_notifications_alert_dialog_title">Allow notifications</string>
+    <string name="allow_notifications_alert_dialog_message">Do you want to receive discount
+        notifications from Rate It?</string>
+    <string name="allow_notifications_alert_dialog_positive">Of course!</string>
+    <string name="allow_notifications_alert_dialog_negative">No thanks</string>
 </resources>
