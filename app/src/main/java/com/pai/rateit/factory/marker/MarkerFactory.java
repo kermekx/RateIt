@@ -20,7 +20,7 @@ import com.pai.rateit.utils.DistanceUtils;
  * Created by kevin on 26/04/2018.
  */
 
-public class MarkerFactory {
+public class MarkerFactory implements GoogleMap.OnMarkerClickListener {
 
     private Context mContext;
     private GoogleMap mMap;
@@ -38,6 +38,7 @@ public class MarkerFactory {
 
     public MarkerFactory map(GoogleMap map) {
         mMap = map;
+        mMap.setOnMarkerClickListener(this);
         return this;
     }
 
@@ -84,4 +85,19 @@ public class MarkerFactory {
         return new LatLng(userPos.getLatitude(), userPos.getLongitude());
     }
 
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        Object tag = marker.getTag();
+        if (tag instanceof Store) {
+            Store store = (Store) tag;
+
+            // Update distance
+            LatLng userLatlng = getUserLoc();
+            if (userLatlng != null)
+                marker.setTitle(store.getName() + " " + store.getAddress() + " (" +
+                                DistanceUtils.metersToString(store.getLatLng(),
+                                        userLatlng, mContext) + ")");
+        }
+        return false;
+    }
 }
