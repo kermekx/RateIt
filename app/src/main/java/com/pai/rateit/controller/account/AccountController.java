@@ -1,4 +1,4 @@
-package com.pai.rateit.manager.account;
+package com.pai.rateit.controller.account;
 
 import android.app.Activity;
 import android.content.DialogInterface;
@@ -18,15 +18,14 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.pai.rateit.R;
-
-import java.util.HashMap;
-import java.util.Map;
+import com.pai.rateit.mapper.store.UserMapper;
+import com.pai.rateit.model.user.User;
 
 /**
  * Created by kevin on 27/04/2018.
  */
 
-public class AccountManager implements FirebaseAuth.AuthStateListener {
+public class AccountController implements FirebaseAuth.AuthStateListener {
 
     public static String TAG_SIGN_IN = "SIGN_IN";
     public static String TAG_DATABASE = "DATABASE";
@@ -35,9 +34,9 @@ public class AccountManager implements FirebaseAuth.AuthStateListener {
     private AccountStateListener mAccountStateListener;
     private FirebaseAuth mAuth;
     private FirebaseFirestore mDb;
-    private boolean notify = false;
+    private User mUser = null;
 
-    public AccountManager(Activity activity, AccountStateListener accountStateListener) {
+    public AccountController(Activity activity, AccountStateListener accountStateListener) {
         mActivity = activity;
 
         mAuth = FirebaseAuth.getInstance();
@@ -70,7 +69,7 @@ public class AccountManager implements FirebaseAuth.AuthStateListener {
                 });
     }
 
-    public void askPermissionIfRequired() {
+    public void loadUserData() {
         if (!isAuth())
             return;
 
@@ -81,51 +80,58 @@ public class AccountManager implements FirebaseAuth.AuthStateListener {
                 if (task.isSuccessful()) {
                     DocumentSnapshot document = task.getResult();
                     if (document.exists()) {
-                        notify = document.getBoolean("notify");
+                        mUser = document.toObject(User.class);
                         if (mAccountStateListener != null)
-                            mAccountStateListener.onNotifyStateChanged(notify);
+                            mAccountStateListener.onUserDataChanged(mUser);
                     } else {
-                        new AlertDialog.Builder(mActivity)
-                                .setTitle(R.string.allow_notifications_alert_dialog_title)
-                                .setMessage(R.string.allow_notifications_alert_dialog_message)
-                                .setPositiveButton(R.string.allow_notifications_alert_dialog_positive,
-                                        new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                onNotificationPermissionResult(true);
-                                            }
-                                        })
-                                .setNegativeButton(R.string.allow_notifications_alert_dialog_negative,
-                                        new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                onNotificationPermissionResult(false);
-                                            }
-                                        })
-                                .show();
+                        mUser = new User();
+                        askForNotifyPermission();
                     }
                 } else {
                     Log.d(TAG_DATABASE, "get failed with ", task.getException());
+                    mUser = null;
+                    if (mAccountStateListener != null)
+                        mAccountStateListener.onUserDataChanged(null);
                 }
             }
         });
     }
 
-    public void onNotificationPermissionResult(final boolean granted) {
+    public void askForNotifyPermission() {
         if (!isAuth())
             return;
 
-        Map<String, Object> data = new HashMap<>();
-        data.put("notify", granted);
+        new AlertDialog.Builder(mActivity)
+                .setTitle(R.string.allow_notifications_alert_dialog_title)
+                .setMessage(R.string.allow_notifications_alert_dialog_message)
+                .setPositiveButton(R.string.allow_notifications_alert_dialog_positive,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                setNotificationPermission(true);
+                            }
+                        })
+                .setNegativeButton(R.string.allow_notifications_alert_dialog_negative,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                setNotificationPermission(false);
+                            }
+                        })
+                .show();
+    }
+
+    public void pushUserDataToCloud() {
+        if (!isAuth() || mUser == null)
+            return;
 
         mDb.collection("users").document(mAuth.getCurrentUser().getUid())
-                .set(data)
+                .set(new UserMapper().serialize(mUser))
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        notify = granted;
                         if (mAccountStateListener != null)
-                            mAccountStateListener.onNotifyStateChanged(notify);
+                            mAccountStateListener.onUserDataChanged(mUser);
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -136,17 +142,21 @@ public class AccountManager implements FirebaseAuth.AuthStateListener {
                 });
     }
 
-    public boolean shouldNotify() {
-        return notify;
+    public void setNotificationPermission(boolean granted) {
+        if (!isAuth() || mUser == null)
+            return;
+
+        mUser.setNotify(granted);
+        pushUserDataToCloud();
     }
 
     @Override
     public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-        notify = false;
+        mUser = null;
         if (!isAuth())
             signInAnonymously();
         else
-            askPermissionIfRequired();
+            loadUserData();//askPermissionIfRequired();
 
         if (mAccountStateListener != null)
             mAccountStateListener.onAccountChanged(firebaseAuth.getCurrentUser());
@@ -154,7 +164,6 @@ public class AccountManager implements FirebaseAuth.AuthStateListener {
 
     public interface AccountStateListener {
         public void onAccountChanged(FirebaseUser firebaseUser);
-
-        public void onNotifyStateChanged(boolean notify);
+        public void onUserDataChanged(User user);
     }
 }

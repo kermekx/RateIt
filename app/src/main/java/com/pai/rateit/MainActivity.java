@@ -17,13 +17,13 @@ import android.view.MenuItem;
 import com.google.firebase.auth.FirebaseUser;
 import com.pai.rateit.activity.SettingsActivity;
 import com.pai.rateit.fragment.maps.MapsFragment;
-import com.pai.rateit.manager.account.AccountManager;
+import com.pai.rateit.controller.account.AccountController;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, MapsFragment.OnFragmentInteractionListener, AccountManager.AccountStateListener {
+        implements NavigationView.OnNavigationItemSelectedListener, MapsFragment.OnFragmentInteractionListener {
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity
         ButterKnife.bind(this);
         setSupportActionBar(toolbar);
 
-        new AccountManager(this, this);
+        new AccountController(this, null);
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -115,15 +115,5 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
-    }
-
-    @Override
-    public void onAccountChanged(FirebaseUser firebaseUser) {
-
-    }
-
-    @Override
-    public void onNotifyStateChanged(boolean notify) {
-
     }
 }
