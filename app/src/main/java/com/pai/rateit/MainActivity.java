@@ -14,10 +14,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.google.firebase.auth.FirebaseUser;
 import com.pai.rateit.activity.SettingsActivity;
-import com.pai.rateit.fragment.maps.MapsFragment;
 import com.pai.rateit.controller.account.AccountController;
+import com.pai.rateit.fragment.maps.MapsFragment;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;

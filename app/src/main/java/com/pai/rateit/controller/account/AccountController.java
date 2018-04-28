@@ -156,7 +156,7 @@ public class AccountController implements FirebaseAuth.AuthStateListener {
         if (!isAuth())
             signInAnonymously();
         else
-            loadUserData();//askPermissionIfRequired();
+            loadUserData();
 
         if (mAccountStateListener != null)
             mAccountStateListener.onAccountChanged(firebaseAuth.getCurrentUser());
