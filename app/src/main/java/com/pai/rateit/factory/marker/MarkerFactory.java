@@ -62,13 +62,14 @@ public class MarkerFactory implements GoogleMap.OnMarkerClickListener {
         if (userLatlng == null)
             marker = mMap.addMarker(new MarkerOptions()
                     .position(store.getLatLng())
-                    .title(store.getName() + " " + store.getAddress()));
+                    .title(store.getName())
+                    .snippet(store.getAddress()));
         else
             marker = mMap.addMarker(new MarkerOptions()
                     .position(store.getLatLng())
-                    .title(store.getName() + " " + store.getAddress() + " (" +
-                            DistanceUtils.metersToString(store.getLatLng(),
-                                    userLatlng, mContext) + ")"));
+                    .title(store.getName())
+                    .snippet(store.getAddress() + " (" + DistanceUtils.metersToString(
+                            store.getLatLng(), userLatlng, mContext) + ")"));
 
         marker.setTag(store);
     }
@@ -76,13 +77,13 @@ public class MarkerFactory implements GoogleMap.OnMarkerClickListener {
     private LatLng getUserLoc() {
         if (mLocationManager == null || mContext == null || mCriteria == null ||
                 ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED)
+                        != PackageManager.PERMISSION_GRANTED)
             return null;
 
         Location userPos = mLocationManager.getLastKnownLocation(mLocationManager
                 .getBestProvider(mCriteria, false));
 
-        return new LatLng(userPos.getLatitude(), userPos.getLongitude());
+        return (userPos != null) ? new LatLng(userPos.getLatitude(), userPos.getLongitude()) : null;
     }
 
     @Override
@@ -93,10 +94,11 @@ public class MarkerFactory implements GoogleMap.OnMarkerClickListener {
 
             // Update distance
             LatLng userLatlng = getUserLoc();
-            if (userLatlng != null)
-                marker.setTitle(store.getName() + " " + store.getAddress() + " (" +
-                                DistanceUtils.metersToString(store.getLatLng(),
-                                        userLatlng, mContext) + ")");
+            if (userLatlng != null) {
+                marker.setTitle(store.getName());
+                marker.setSnippet(store.getAddress() + " (" + DistanceUtils.metersToString(
+                        store.getLatLng(), userLatlng, mContext) + ")");
+            }
         }
         return false;
     }

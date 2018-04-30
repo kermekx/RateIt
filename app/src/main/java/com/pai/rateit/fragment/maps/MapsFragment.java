@@ -31,9 +31,6 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.pai.rateit.R;
 import com.pai.rateit.factory.marker.MarkerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 
@@ -48,6 +45,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
 
     public static String FRAGMENT_TAG = "MapsFragment";
     public static int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 411;
+    public static int PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 422;
 
     SupportMapFragment mapFragment;
     private Unbinder unbinder;
@@ -130,10 +128,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
         mMap = googleMap;
 
         if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            mMap.setMyLocationEnabled(true);
-            centerMapToCurrentLocation();
-        } else {
+                != PackageManager.PERMISSION_GRANTED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
                     Manifest.permission.ACCESS_FINE_LOCATION)) {
 
@@ -141,14 +136,37 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
                 // Add a marker in Sydney and move the camera
-                LatLng lille = new LatLng(51, 3);
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(lille));
-                mMap.moveCamera(CameraUpdateFactory.zoomTo(15));
+                centerMapToDefaultLocation();
             } else {
                 ActivityCompat.requestPermissions(getActivity(),
                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                         PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
             }
+        }
+
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
+                    Manifest.permission.ACCESS_COARSE_LOCATION)) {
+
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+                // Add a marker in Sydney and move the camera
+                centerMapToDefaultLocation();
+            } else {
+                ActivityCompat.requestPermissions(getActivity(),
+                        new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                        PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
+            }
+        }
+
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+                getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED) {
+            mMap.setMyLocationEnabled(true);
+            centerMapToCurrentLocation();
         }
 
         testDrawPoints();
@@ -169,9 +187,21 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
             } else {
                 // Permission was denied. Display an error message.
                 // Add a marker in Lille and move the camera
-                LatLng lille = new LatLng(51, 3);
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(lille));
-                mMap.moveCamera(CameraUpdateFactory.zoomTo(15));
+                centerMapToDefaultLocation();
+            }
+        } else if (requestCode == PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION) {
+            if (permissions.length == 1 &&
+                    permissions[0] == Manifest.permission.ACCESS_COARSE_LOCATION &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED) {
+                    mMap.setMyLocationEnabled(true);
+                    centerMapToCurrentLocation();
+                }
+            } else {
+                // Permission was denied. Display an error message.
+                // Add a marker in Lille and move the camera
+                centerMapToDefaultLocation();
             }
         }
     }
@@ -179,7 +209,9 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
     @RequiresPermission(anyOf = {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION})
     private void centerMapToCurrentLocation() {
         if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
+                == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+                getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED) {
             LocationManager locationManager = (LocationManager)
                     getActivity().getSystemService(Context.LOCATION_SERVICE);
             Criteria criteria = new Criteria();
@@ -188,60 +220,41 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
             Location userPos = locationManager.getLastKnownLocation(locationManager
                     .getBestProvider(criteria, false));
 
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(userPos.getLatitude(), userPos.getLongitude())));
-            mMap.moveCamera(CameraUpdateFactory.zoomTo(15));
+            if (userPos != null) {
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(userPos.getLatitude(), userPos.getLongitude())));
+                mMap.moveCamera(CameraUpdateFactory.zoomTo(15));
+            }
         }
     }
 
+    private void centerMapToDefaultLocation() {
+        LatLng lille = new LatLng(51, 3);
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(lille));
+        mMap.moveCamera(CameraUpdateFactory.zoomTo(15));
+    }
+
     private void testDrawPoints() {
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("testData")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            MarkerFactory markerFactory = new MarkerFactory()
+                                    .context(getContext())
+                                    .map(mMap)
+                                    .locationManager((LocationManager) getActivity()
+                                            .getSystemService(Context.LOCATION_SERVICE));
 
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-            db.collection("testData")
-                    .get()
-                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                            if (task.isSuccessful()) {
-                                MarkerFactory markerFactory = new MarkerFactory()
-                                        .context(getContext())
-                                        .map(mMap)
-                                        .locationManager((LocationManager) getActivity()
-                                                .getSystemService(Context.LOCATION_SERVICE));
-
-                                for (QueryDocumentSnapshot document : task.getResult()) {
-                                    markerFactory.mark(document);
-                                }
-                            } else {
-                                Log.w("MapsFragment", "Error getting documents.", task.getException());
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                markerFactory.mark(document);
                             }
+                        } else {
+                            Log.w("MapsFragment", "Error getting documents.", task.getException());
                         }
-                    });
-
-        } else {
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-            db.collection("testData")
-                    .get()
-                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                            if (task.isSuccessful()) {
-                                MarkerFactory markerFactory = new MarkerFactory()
-                                        .context(getContext())
-                                        .map(mMap)
-                                        .locationManager((LocationManager) getActivity()
-                                                .getSystemService(Context.LOCATION_SERVICE));
-
-                                for (QueryDocumentSnapshot document : task.getResult()) {
-                                    markerFactory.mark(document);
-                                }
-                            } else {
-                                Log.w("MapsFragment", "Error getting documents.", task.getException());
-                            }
-                        }
-                    });
-        }
+                    }
+                });
     }
 
     public interface OnFragmentInteractionListener {
