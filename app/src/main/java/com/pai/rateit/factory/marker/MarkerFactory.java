@@ -16,6 +16,8 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.pai.rateit.model.store.Store;
 import com.pai.rateit.utils.DistanceUtils;
 
+import java.util.List;
+
 /**
  * Created by kevin on 26/04/2018.
  */
@@ -56,7 +58,7 @@ public class MarkerFactory implements GoogleMap.OnMarkerClickListener {
         if (mMap == null)
             return;
 
-        LatLng userLatlng = getUserLoc();
+        LatLng userLatlng = getLastKnownLocation();
 
         Marker marker;
         if (userLatlng == null)
@@ -74,16 +76,30 @@ public class MarkerFactory implements GoogleMap.OnMarkerClickListener {
         marker.setTag(store);
     }
 
-    private LatLng getUserLoc() {
+    private LatLng getLastKnownLocation() {
         if (mLocationManager == null || mContext == null || mCriteria == null ||
                 ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION)
-                        != PackageManager.PERMISSION_GRANTED)
+                == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+                mContext, Manifest.permission.ACCESS_COARSE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED) {
+
+            List<String> providers = mLocationManager.getProviders(true);
+            Location bestLocation = null;
+            for (String provider : providers) {
+                Location l = mLocationManager.getLastKnownLocation(provider);
+                if (l == null) {
+                    continue;
+                }
+                if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
+                    // Found best last known location: %s", l);
+                    bestLocation = l;
+                }
+            }
+            return (bestLocation != null) ?
+                    new LatLng(bestLocation.getLatitude(), bestLocation.getLongitude()) : null;
+        } else {
             return null;
-
-        Location userPos = mLocationManager.getLastKnownLocation(mLocationManager
-                .getBestProvider(mCriteria, false));
-
-        return (userPos != null) ? new LatLng(userPos.getLatitude(), userPos.getLongitude()) : null;
+        }
     }
 
     @Override
@@ -93,7 +109,7 @@ public class MarkerFactory implements GoogleMap.OnMarkerClickListener {
             Store store = (Store) tag;
 
             // Update distance
-            LatLng userLatlng = getUserLoc();
+            LatLng userLatlng = getLastKnownLocation();
             if (userLatlng != null) {
                 marker.setTitle(store.getName());
                 marker.setSnippet(store.getAddress() + " (" + DistanceUtils.metersToString(

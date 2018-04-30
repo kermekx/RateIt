@@ -31,6 +31,8 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.pai.rateit.R;
 import com.pai.rateit.factory.marker.MarkerFactory;
 
+import java.util.List;
+
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 
@@ -136,7 +138,6 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
                 // Add a marker in Sydney and move the camera
-                centerMapToDefaultLocation();
             } else {
                 ActivityCompat.requestPermissions(getActivity(),
                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
@@ -153,7 +154,6 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
                 // Add a marker in Sydney and move the camera
-                centerMapToDefaultLocation();
             } else {
                 ActivityCompat.requestPermissions(getActivity(),
                         new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
@@ -167,6 +167,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
                 PackageManager.PERMISSION_GRANTED) {
             mMap.setMyLocationEnabled(true);
             centerMapToCurrentLocation();
+        } else {
+            centerMapToDefaultLocation();
         }
 
         testDrawPoints();
@@ -183,6 +185,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
                         == PackageManager.PERMISSION_GRANTED) {
                     mMap.setMyLocationEnabled(true);
                     centerMapToCurrentLocation();
+                } else {
+                    centerMapToDefaultLocation();
                 }
             } else {
                 // Permission was denied. Display an error message.
@@ -197,6 +201,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
                         == PackageManager.PERMISSION_GRANTED) {
                     mMap.setMyLocationEnabled(true);
                     centerMapToCurrentLocation();
+                } else {
+                    centerMapToDefaultLocation();
                 }
             } else {
                 // Permission was denied. Display an error message.
@@ -208,29 +214,44 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
 
     @RequiresPermission(anyOf = {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION})
     private void centerMapToCurrentLocation() {
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
-                getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) ==
-                PackageManager.PERMISSION_GRANTED) {
-            LocationManager locationManager = (LocationManager)
-                    getActivity().getSystemService(Context.LOCATION_SERVICE);
-            Criteria criteria = new Criteria();
-
-
-            Location userPos = locationManager.getLastKnownLocation(locationManager
-                    .getBestProvider(criteria, false));
+            Location userPos =  getLastKnownLocation();
 
             if (userPos != null) {
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(userPos.getLatitude(), userPos.getLongitude())));
                 mMap.moveCamera(CameraUpdateFactory.zoomTo(15));
+            } else {
+                centerMapToDefaultLocation();
             }
-        }
     }
 
     private void centerMapToDefaultLocation() {
         LatLng lille = new LatLng(51, 3);
         mMap.moveCamera(CameraUpdateFactory.newLatLng(lille));
         mMap.moveCamera(CameraUpdateFactory.zoomTo(15));
+    }
+
+    private Location getLastKnownLocation() {
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+                getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED) {
+            LocationManager mLocationManager = (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
+            List<String> providers = mLocationManager.getProviders(true);
+            Location bestLocation = null;
+            for (String provider : providers) {
+                Location l = mLocationManager.getLastKnownLocation(provider);
+                if (l == null) {
+                    continue;
+                }
+                if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
+                    // Found best last known location: %s", l);
+                    bestLocation = l;
+                }
+            }
+            return bestLocation;
+        } else {
+            return null;
+        }
     }
 
     private void testDrawPoints() {
