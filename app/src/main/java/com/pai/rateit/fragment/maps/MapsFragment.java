@@ -3,56 +3,34 @@ package com.pai.rateit.fragment.maps;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.location.Criteria;
-import android.location.Location;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.RequiresPermission;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.pai.rateit.R;
-import com.pai.rateit.factory.marker.MarkerFactory;
-
-import java.util.List;
+import com.pai.rateit.controller.maps.MapsController;
 
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
-
-import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
-import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
 /**
  * Created by kevin on 16/04/2018.
  */
 
-public class MapsFragment extends Fragment implements OnMapReadyCallback {
+public class MapsFragment extends Fragment {
 
     public static String FRAGMENT_TAG = "MapsFragment";
     public static int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 411;
     public static int PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 422;
 
-    SupportMapFragment mapFragment;
     private Unbinder unbinder;
     private OnFragmentInteractionListener mListener;
-    private GoogleMap mMap;
+    private MapsController mMapsController;
 
     public MapsFragment() {
         // Required empty public constructor
@@ -76,8 +54,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
                 false);
         unbinder = ButterKnife.bind(this, view);
 
-        mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        mMapsController = new MapsController(getActivity(),
+                (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map));
 
         return view;
     }
@@ -126,156 +104,18 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
     }
 
     @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
-                    Manifest.permission.ACCESS_FINE_LOCATION)) {
-
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-                // Add a marker in Sydney and move the camera
-            } else {
-                ActivityCompat.requestPermissions(getActivity(),
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
-            }
-        }
-
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
-                    Manifest.permission.ACCESS_COARSE_LOCATION)) {
-
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-                // Add a marker in Sydney and move the camera
-            } else {
-                ActivityCompat.requestPermissions(getActivity(),
-                        new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                        PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
-            }
-        }
-
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
-                getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) ==
-                PackageManager.PERMISSION_GRANTED) {
-            mMap.setMyLocationEnabled(true);
-            centerMapToCurrentLocation();
-        } else {
-            centerMapToDefaultLocation();
-        }
-
-        testDrawPoints();
-
-    }
-
-    @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
             if (permissions.length == 1 &&
                     permissions[0] == Manifest.permission.ACCESS_FINE_LOCATION &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                        == PackageManager.PERMISSION_GRANTED) {
-                    mMap.setMyLocationEnabled(true);
-                    centerMapToCurrentLocation();
-                } else {
-                    centerMapToDefaultLocation();
-                }
-            } else {
-                // Permission was denied. Display an error message.
-                // Add a marker in Lille and move the camera
-                centerMapToDefaultLocation();
-            }
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                mMapsController.onPermissionGranted();
         } else if (requestCode == PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION) {
             if (permissions.length == 1 &&
                     permissions[0] == Manifest.permission.ACCESS_COARSE_LOCATION &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION)
-                        == PackageManager.PERMISSION_GRANTED) {
-                    mMap.setMyLocationEnabled(true);
-                    centerMapToCurrentLocation();
-                } else {
-                    centerMapToDefaultLocation();
-                }
-            } else {
-                // Permission was denied. Display an error message.
-                // Add a marker in Lille and move the camera
-                centerMapToDefaultLocation();
-            }
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                mMapsController.onPermissionGranted();
         }
-    }
-
-    @RequiresPermission(anyOf = {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION})
-    private void centerMapToCurrentLocation() {
-            Location userPos =  getLastKnownLocation();
-
-            if (userPos != null) {
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(userPos.getLatitude(), userPos.getLongitude())));
-                mMap.moveCamera(CameraUpdateFactory.zoomTo(15));
-            } else {
-                centerMapToDefaultLocation();
-            }
-    }
-
-    private void centerMapToDefaultLocation() {
-        LatLng lille = new LatLng(51, 3);
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(lille));
-        mMap.moveCamera(CameraUpdateFactory.zoomTo(15));
-    }
-
-    private Location getLastKnownLocation() {
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
-                getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) ==
-                PackageManager.PERMISSION_GRANTED) {
-            LocationManager mLocationManager = (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
-            List<String> providers = mLocationManager.getProviders(true);
-            Location bestLocation = null;
-            for (String provider : providers) {
-                Location l = mLocationManager.getLastKnownLocation(provider);
-                if (l == null) {
-                    continue;
-                }
-                if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
-                    // Found best last known location: %s", l);
-                    bestLocation = l;
-                }
-            }
-            return bestLocation;
-        } else {
-            return null;
-        }
-    }
-
-    private void testDrawPoints() {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("testData")
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            MarkerFactory markerFactory = new MarkerFactory()
-                                    .context(getContext())
-                                    .map(mMap)
-                                    .locationManager((LocationManager) getActivity()
-                                            .getSystemService(Context.LOCATION_SERVICE));
-
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                markerFactory.mark(document);
-                            }
-                        } else {
-                            Log.w("MapsFragment", "Error getting documents.", task.getException());
-                        }
-                    }
-                });
     }
 
     public interface OnFragmentInteractionListener {

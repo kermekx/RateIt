@@ -27,8 +27,8 @@ import com.pai.rateit.model.user.User;
 
 public class AccountController implements FirebaseAuth.AuthStateListener {
 
-    public static String TAG_SIGN_IN = "SIGN_IN";
-    public static String TAG_DATABASE = "DATABASE";
+    private static String TAG_SIGN_IN = "SIGN_IN";
+    private static String TAG_DATABASE = "DATABASE";
 
     private Activity mActivity;
     private AccountStateListener mAccountStateListener;
@@ -47,11 +47,11 @@ public class AccountController implements FirebaseAuth.AuthStateListener {
         mDb = FirebaseFirestore.getInstance();
     }
 
-    public boolean isAuth() {
+    private boolean isAuth() {
         return mAuth.getCurrentUser() != null;
     }
 
-    public void signInAnonymously() {
+    private void signInAnonymously() {
         mAuth.signInAnonymously()
                 .addOnCompleteListener(mActivity, new OnCompleteListener<AuthResult>() {
                     @Override
@@ -69,7 +69,7 @@ public class AccountController implements FirebaseAuth.AuthStateListener {
                 });
     }
 
-    public void loadUserData() {
+    private void loadUserData() {
         if (!isAuth())
             return;
 
@@ -97,7 +97,7 @@ public class AccountController implements FirebaseAuth.AuthStateListener {
         });
     }
 
-    public void askForNotifyPermission() {
+    private void askForNotifyPermission() {
         if (!isAuth())
             return;
 
@@ -121,7 +121,7 @@ public class AccountController implements FirebaseAuth.AuthStateListener {
                 .show();
     }
 
-    public void pushUserDataToCloud() {
+    private void pushUserDataToCloud() {
         if (!isAuth() || mUser == null)
             return;
 
