@@ -5,12 +5,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -19,19 +16,23 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.pai.rateit.factory.marker.MarkerFactory;
 import com.pai.rateit.fragment.maps.MapsFragment;
+import com.pai.rateit.utils.DistanceUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by kevin on 02/05/2018.
  */
 
-public class MapsController implements OnMapReadyCallback {
+public class MapsController implements OnMapReadyCallback, GoogleMap.OnCameraIdleListener {
 
     private Activity mActivity;
     private GoogleMap mMap;
     private LocationManager mLocationManager;
     private MarkerController mMarkerController;
+
+    List<Long> loadedChunk = new ArrayList<>();
 
     public MapsController(Activity activity, SupportMapFragment mapFragment) {
         mActivity = activity;
@@ -45,6 +46,7 @@ public class MapsController implements OnMapReadyCallback {
         mMap = googleMap;
         mMarkerController = new MarkerController(new MarkerFactory().context(mActivity).map(mMap)
                 .locationManager(mLocationManager));
+        mMap.setOnCameraIdleListener(this);
 
         askPermissionIfRequired(Manifest.permission.ACCESS_FINE_LOCATION,
                 MapsFragment.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
@@ -73,9 +75,15 @@ public class MapsController implements OnMapReadyCallback {
         Location userPos = getLastKnownLocation();
 
         if (userPos != null) {
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(userPos.getLatitude(), userPos.getLongitude())));
+            LatLng pos = new LatLng(userPos.getLatitude(), userPos.getLongitude());
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(pos));
             mMap.moveCamera(CameraUpdateFactory.zoomTo(15));
-            mMarkerController.findNearby(new LatLng(userPos.getLatitude(), userPos.getLongitude()));
+
+            long chunk = DistanceUtils.getChunkId(pos);
+            if (!loadedChunk.contains(chunk)) {
+                mMarkerController.findNearby(pos);
+                loadedChunk.add(chunk);
+            }
         } else {
             centerMapToDefaultLocation();
         }
@@ -85,7 +93,12 @@ public class MapsController implements OnMapReadyCallback {
         LatLng lille = new LatLng(50.6292, 3.0573);
         mMap.moveCamera(CameraUpdateFactory.newLatLng(lille));
         mMap.moveCamera(CameraUpdateFactory.zoomTo(15));
-        mMarkerController.findNearby(lille);
+
+        long chunk = DistanceUtils.getChunkId(lille);
+        if (!loadedChunk.contains(chunk)) {
+            mMarkerController.findNearby(lille);
+            loadedChunk.add(chunk);
+        }
     }
 
     private Location getLastKnownLocation() {
@@ -131,5 +144,17 @@ public class MapsController implements OnMapReadyCallback {
                     == PackageManager.PERMISSION_GRANTED)
                 return true;
         return false;
+    }
+
+    @Override
+    public void onCameraIdle() {
+        if (mMap.getCameraPosition().zoom > 12)
+            return;
+
+        long chunk = DistanceUtils.getChunkId(mMap.getCameraPosition().target);
+        if (!loadedChunk.contains(chunk)) {
+            mMarkerController.findNearby(mMap.getCameraPosition().target);
+            loadedChunk.add(chunk);
+        }
     }
 }

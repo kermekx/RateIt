@@ -5,6 +5,7 @@ import android.location.Location;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.pai.rateit.R;
+import com.pai.rateit.controller.maps.MarkerController;
 
 /**
  * Created by kevin on 21/04/2018.
@@ -54,5 +55,23 @@ public class DistanceUtils {
 
     public static String metersToString(LatLng left, LatLng right, Context context) {
         return metersToString(getDistance(left, right), context);
+    }
+
+    public static long getChunkId(double lat, double lon) {
+        lat += 90;
+        lon += 180;
+
+        long maxLat = (long) (180 / (MarkerController.ONE_MILE_LAT
+                * MarkerController.MAX_QUERY_DISTANCE_MILES));
+        long latL = (long) (lat / (MarkerController.ONE_MILE_LAT
+                * MarkerController.MAX_QUERY_DISTANCE_MILES));
+        long lonL = (long) (lon / (MarkerController.ONE_MILE_LON
+                * MarkerController.MAX_QUERY_DISTANCE_MILES));
+
+        return maxLat * lonL + latL;
+    }
+
+    public static long getChunkId(LatLng latLng) {
+        return getChunkId(latLng.latitude, latLng.longitude);
     }
 }
