@@ -8,7 +8,6 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -18,11 +17,6 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.pai.rateit.factory.marker.MarkerFactory;
 import com.pai.rateit.fragment.maps.MapsFragment;
 
@@ -37,6 +31,7 @@ public class MapsController implements OnMapReadyCallback, LocationListener {
     private Activity mActivity;
     private GoogleMap mMap;
     private LocationManager mLocationManager;
+    private MarkerController mMarkerController;
     private boolean seekingPosition = true;
 
     public MapsController(Activity activity, SupportMapFragment mapFragment) {
@@ -49,6 +44,8 @@ public class MapsController implements OnMapReadyCallback, LocationListener {
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMarkerController = new MarkerController(new MarkerFactory().context(mActivity).map(mMap)
+                .locationManager(mLocationManager));
 
         askPermissionIfRequired(Manifest.permission.ACCESS_FINE_LOCATION,
                 MapsFragment.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
@@ -62,9 +59,6 @@ public class MapsController implements OnMapReadyCallback, LocationListener {
         } else {
             centerMapToDefaultLocation();
         }
-
-        //TODO change to realtime data seeking
-        testDrawPoints();
     }
 
     @Override
@@ -113,6 +107,7 @@ public class MapsController implements OnMapReadyCallback, LocationListener {
             seekingPosition = false;
             mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(userPos.getLatitude(), userPos.getLongitude())));
             mMap.moveCamera(CameraUpdateFactory.zoomTo(15));
+            mMarkerController.findNearby(new LatLng(userPos.getLatitude(), userPos.getLongitude()));
         } else {
             centerMapToDefaultLocation();
         }
@@ -122,6 +117,7 @@ public class MapsController implements OnMapReadyCallback, LocationListener {
         LatLng lille = new LatLng(50.6292, 3.0573);
         mMap.moveCamera(CameraUpdateFactory.newLatLng(lille));
         mMap.moveCamera(CameraUpdateFactory.zoomTo(15));
+        mMarkerController.findNearby(lille);
     }
 
     private Location getLastKnownLocation() {
@@ -167,27 +163,5 @@ public class MapsController implements OnMapReadyCallback, LocationListener {
                     == PackageManager.PERMISSION_GRANTED)
                 return true;
         return false;
-    }
-
-    private void testDrawPoints() {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("testData")
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            MarkerFactory markerFactory = new MarkerFactory()
-                                    .context(mActivity)
-                                    .map(mMap)
-                                    .locationManager(mLocationManager);
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                markerFactory.mark(document);
-                            }
-                        } else {
-                            Log.w("MapsFragment", "Error getting documents.", task.getException());
-                        }
-                    }
-                });
     }
 }
