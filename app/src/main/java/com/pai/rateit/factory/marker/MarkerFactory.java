@@ -7,27 +7,33 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.pai.rateit.controller.maps.MarkerController;
 import com.pai.rateit.model.store.Store;
 import com.pai.rateit.utils.DistanceUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by kevin on 26/04/2018.
  */
 
-public class MarkerFactory implements GoogleMap.OnMarkerClickListener {
+public class MarkerFactory {
 
     private Context mContext;
     private GoogleMap mMap;
     private LocationManager mLocationManager;
     private Criteria mCriteria;
+    private boolean showCursor = true;
+
+    private List<Marker> markers = new ArrayList<>();
 
     public MarkerFactory() {
 
@@ -40,13 +46,22 @@ public class MarkerFactory implements GoogleMap.OnMarkerClickListener {
 
     public MarkerFactory map(GoogleMap map) {
         mMap = map;
-        mMap.setOnMarkerClickListener(this);
         return this;
     }
 
     public MarkerFactory locationManager(LocationManager locationManager) {
         mLocationManager = locationManager;
         mCriteria = new Criteria();
+        return this;
+    }
+
+    public MarkerFactory cameraMoveListener(GoogleMap.OnCameraMoveListener cameraMoveListener) {
+        mMap.setOnCameraMoveListener(cameraMoveListener);
+        return this;
+    }
+
+    public MarkerFactory markerClickListener(GoogleMap.OnMarkerClickListener markerClickListener) {
+        mMap.setOnMarkerClickListener(markerClickListener);
         return this;
     }
 
@@ -65,18 +80,21 @@ public class MarkerFactory implements GoogleMap.OnMarkerClickListener {
             marker = mMap.addMarker(new MarkerOptions()
                     .position(store.getLatLng())
                     .title(store.getName())
-                    .snippet(store.getAddress()));
+                    .snippet(store.getAddress())
+                    .visible(showCursor));
         else
             marker = mMap.addMarker(new MarkerOptions()
                     .position(store.getLatLng())
                     .title(store.getName())
                     .snippet(store.getAddress() + " (" + DistanceUtils.metersToString(
-                            store.getLatLng(), userLatlng, mContext) + ")"));
+                            store.getLatLng(), userLatlng, mContext) + ")")
+                    .visible(showCursor));
 
         marker.setTag(store);
+        markers.add(marker);
     }
 
-    private LatLng getLastKnownLocation() {
+    public LatLng getLastKnownLocation() {
         if (mLocationManager == null || mContext == null || mCriteria == null ||
                 ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
@@ -102,20 +120,22 @@ public class MarkerFactory implements GoogleMap.OnMarkerClickListener {
         }
     }
 
-    @Override
-    public boolean onMarkerClick(Marker marker) {
-        Object tag = marker.getTag();
-        if (tag instanceof Store) {
-            Store store = (Store) tag;
+    public Context getContext() {
+        return mContext;
+    }
 
-            // Update distance
-            LatLng userLatlng = getLastKnownLocation();
-            if (userLatlng != null) {
-                marker.setTitle(store.getName());
-                marker.setSnippet(store.getAddress() + " (" + DistanceUtils.metersToString(
-                        store.getLatLng(), userLatlng, mContext) + ")");
-            }
+    public void autoVisible() {
+        // TODO : hide by interest rate
+        visible(mMap.getCameraPosition().zoom > 12);
+    }
+
+    public void visible(boolean visible) {
+        if (visible == this.showCursor)
+            return;
+
+        showCursor = visible;
+        for (Marker marker : markers) {
+            marker.setVisible(showCursor);
         }
-        return false;
     }
 }

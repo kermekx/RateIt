@@ -3,7 +3,9 @@ package com.pai.rateit.controller.maps;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -11,12 +13,14 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.pai.rateit.factory.marker.MarkerFactory;
 import com.pai.rateit.mapper.store.StoreMapper;
+import com.pai.rateit.model.store.Store;
+import com.pai.rateit.utils.DistanceUtils;
 
 /**
  * Created by kevin on 03/05/2018.
  */
 
-public class MarkerController {
+public class MarkerController implements GoogleMap.OnMarkerClickListener, GoogleMap.OnCameraMoveListener {
 
     public final static long MAX_QUERY_DISTANCE_MILES = 20;
     public final static double ONE_MILE_LAT = 0.0144927536231884;
@@ -26,6 +30,8 @@ public class MarkerController {
 
     public MarkerController(MarkerFactory markerFactory) {
         this.mMarkerFactory = markerFactory;
+        markerFactory.markerClickListener(this);
+        markerFactory.cameraMoveListener(this);
     }
 
     public void findNearby(LatLng pos) {
@@ -48,5 +54,27 @@ public class MarkerController {
                         }
                     }
                 });
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        Object tag = marker.getTag();
+        if (tag instanceof Store) {
+            Store store = (Store) tag;
+
+            // Update distance
+            LatLng userLatlng = mMarkerFactory.getLastKnownLocation();
+            if (userLatlng != null) {
+                marker.setTitle(store.getName());
+                marker.setSnippet(store.getAddress() + " (" + DistanceUtils.metersToString(
+                        store.getLatLng(), userLatlng, mMarkerFactory.getContext()) + ")");
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void onCameraMove() {
+        mMarkerFactory.autoVisible();
     }
 }
