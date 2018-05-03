@@ -1,23 +1,16 @@
 package com.pai.rateit.controller.maps;
 
-import android.app.Activity;
-import android.os.Debug;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.pai.rateit.factory.marker.MarkerFactory;
 import com.pai.rateit.mapper.store.StoreMapper;
-import com.pai.rateit.mapper.store.UserMapper;
-import com.pai.rateit.model.store.Store;
 
 /**
  * Created by kevin on 03/05/2018.

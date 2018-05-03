@@ -26,13 +26,12 @@ import java.util.List;
  * Created by kevin on 02/05/2018.
  */
 
-public class MapsController implements OnMapReadyCallback, LocationListener {
+public class MapsController implements OnMapReadyCallback {
 
     private Activity mActivity;
     private GoogleMap mMap;
     private LocationManager mLocationManager;
     private MarkerController mMarkerController;
-    private boolean seekingPosition = true;
 
     public MapsController(Activity activity, SupportMapFragment mapFragment) {
         mActivity = activity;
@@ -61,41 +60,12 @@ public class MapsController implements OnMapReadyCallback, LocationListener {
         }
     }
 
-    @Override
-    public void onProviderDisabled(String provider) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        Log.d("LocationChanged", "seeking : " + seekingPosition);
-        if (seekingPosition && mMap != null)
-            centerMapToLastKnowLocation();
-    }
-
     public void onPermissionGranted() {
         if (checkAnyPermission(Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION)) {
             mMap.setMyLocationEnabled(true);
 
-            mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0,
-                    0, this);
-
-            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0,
-                    0, this);
-
-            if (seekingPosition)
-                centerMapToLastKnowLocation();
+            centerMapToLastKnowLocation();
         }
     }
 
@@ -103,8 +73,6 @@ public class MapsController implements OnMapReadyCallback, LocationListener {
         Location userPos = getLastKnownLocation();
 
         if (userPos != null) {
-            Log.e("LocationChanged", "move : " + userPos);
-            seekingPosition = false;
             mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(userPos.getLatitude(), userPos.getLongitude())));
             mMap.moveCamera(CameraUpdateFactory.zoomTo(15));
             mMarkerController.findNearby(new LatLng(userPos.getLatitude(), userPos.getLongitude()));
