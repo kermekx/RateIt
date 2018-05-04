@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.design.widget.NavigationView;
+import android.support.transition.Slide;
+import android.support.transition.Transition;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
@@ -14,6 +16,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 
 import com.pai.rateit.activity.SettingsActivity;
 import com.pai.rateit.controller.account.AccountController;
@@ -123,7 +126,24 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onStoreMarkerClicked(Store store) {
-        Log.d("Store clicked", store.getName());
-        return false;
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        Fragment fragment = fragmentManager.findFragmentByTag(StoreOverviewFragment.FRAGMENT_TAG);
+
+        if (fragment != null) {
+            if (fragment instanceof StoreOverviewFragment) {
+                ((StoreOverviewFragment) fragment).setStore(store);
+                return true;
+            }
+            return false;
+        } else {
+            fragment = StoreOverviewFragment.newInstance(store);
+
+            fragment.setEnterTransition(new Slide());
+            fragment.setExitTransition(new Slide());
+
+            fragmentManager.beginTransaction().replace(R.id.flBottomContent, fragment,
+                    StoreOverviewFragment.FRAGMENT_TAG).commit();
+            return true;
+        }
     }
 }

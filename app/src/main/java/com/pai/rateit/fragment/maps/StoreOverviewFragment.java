@@ -6,15 +6,23 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.pai.rateit.R;
 import com.pai.rateit.model.store.Store;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.Unbinder;
 
 
 public class StoreOverviewFragment extends Fragment {
 
     private static final String ARG_STORE = "store";
-
+    public static String FRAGMENT_TAG = "StoreOverview";
+    @BindView(R.id.text_store_name)
+    TextView storeNameTextView;
+    private Unbinder unbinder;
     private Store mStore;
 
     private OnFragmentInteractionListener mListener;
@@ -42,7 +50,13 @@ public class StoreOverviewFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_store_overview, container, false);
+        View view = inflater.inflate(R.layout.fragment_store_overview, container, false);
+        unbinder = ButterKnife.bind(this, view);
+
+        if (mStore != null)
+            setStore(mStore);
+
+        return view;
     }
 
     @Override
@@ -60,6 +74,17 @@ public class StoreOverviewFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        unbinder.unbind();
+    }
+
+    public void setStore(Store store) {
+        storeNameTextView.setText(store.getName() +
+                ((store.getSubtitle() == null) ? "" : " - " + store.getSubtitle()));
     }
 
     public interface OnFragmentInteractionListener {

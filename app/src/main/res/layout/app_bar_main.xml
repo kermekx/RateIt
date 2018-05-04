@@ -20,26 +20,23 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_marginTop="?attr/actionBarSize">
 
         <FrameLayout
             android:id="@+id/flContent"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_marginTop="?attr/actionBarSize"/>
+            android:layout_above="@+id/flBottomContent" />
 
         <FrameLayout
             android:id="@+id/flBottomContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1" />
+            android:layout_alignParentBottom="true"/>
 
-    </LinearLayout>
-
-
+    </RelativeLayout>
 
 </android.support.design.widget.CoordinatorLayout>
