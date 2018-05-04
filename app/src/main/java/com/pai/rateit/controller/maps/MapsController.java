@@ -25,7 +25,8 @@ import java.util.List;
  * Created by kevin on 02/05/2018.
  */
 
-public class MapsController implements OnMapReadyCallback, GoogleMap.OnCameraIdleListener {
+public class MapsController implements OnMapReadyCallback, GoogleMap.OnCameraIdleListener,
+        GoogleMap.OnMapClickListener{
 
     List<Long> loadedChunk = new ArrayList<>();
     private Activity mActivity;
@@ -49,6 +50,7 @@ public class MapsController implements OnMapReadyCallback, GoogleMap.OnCameraIdl
         mMarkerController = new MarkerController(new MarkerFactory().context(mActivity).map(mMap)
                 .locationManager(mLocationManager), mListener);
         mMap.setOnCameraIdleListener(this);
+        mMap.setOnMapClickListener(this);
 
         askPermissionIfRequired(Manifest.permission.ACCESS_FINE_LOCATION,
                 MapsFragment.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
@@ -158,5 +160,10 @@ public class MapsController implements OnMapReadyCallback, GoogleMap.OnCameraIdl
             mMarkerController.findNearby(mMap.getCameraPosition().target);
             loadedChunk.add(chunk);
         }
+    }
+
+    @Override
+    public void onMapClick(LatLng latLng) {
+        mListener.onMapClicked();
     }
 }

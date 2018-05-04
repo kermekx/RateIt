@@ -121,6 +121,7 @@ public class MapsFragment extends Fragment {
 
     public interface OnFragmentInteractionListener {
         public boolean onStoreMarkerClicked(Store store);
+        public void onMapClicked();
     }
 
 }

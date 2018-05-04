@@ -22,6 +22,8 @@ public class StoreOverviewFragment extends Fragment {
     public static String FRAGMENT_TAG = "StoreOverview";
     @BindView(R.id.text_store_name)
     TextView storeNameTextView;
+    @BindView(R.id.text_store_subtitle)
+    TextView storeSubtitleTextView;
     private Unbinder unbinder;
     private Store mStore;
 
@@ -83,8 +85,14 @@ public class StoreOverviewFragment extends Fragment {
     }
 
     public void setStore(Store store) {
-        storeNameTextView.setText(store.getName() +
-                ((store.getSubtitle() == null) ? "" : " - " + store.getSubtitle()));
+        storeNameTextView.setText(store.getName());
+
+        if (store.getSubtitle() == null)
+            storeSubtitleTextView.setVisibility(View.GONE);
+        else {
+            storeSubtitleTextView.setVisibility(View.VISIBLE);
+            storeSubtitleTextView.setText(store.getSubtitle());
+        }
     }
 
     public interface OnFragmentInteractionListener {

@@ -132,6 +132,7 @@ public class MainActivity extends AppCompatActivity
         if (fragment != null) {
             if (fragment instanceof StoreOverviewFragment) {
                 ((StoreOverviewFragment) fragment).setStore(store);
+                fragmentManager.beginTransaction().show(fragment).commit();
                 return true;
             }
             return false;
@@ -139,11 +140,21 @@ public class MainActivity extends AppCompatActivity
             fragment = StoreOverviewFragment.newInstance(store);
 
             fragment.setEnterTransition(new Slide());
-            fragment.setExitTransition(new Slide());
+            fragment.setReturnTransition(new Slide());
 
             fragmentManager.beginTransaction().replace(R.id.flBottomContent, fragment,
                     StoreOverviewFragment.FRAGMENT_TAG).commit();
             return true;
+        }
+    }
+
+    @Override
+    public void onMapClicked() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+
+        Fragment fragment = fragmentManager.findFragmentByTag(StoreOverviewFragment.FRAGMENT_TAG);
+        if (fragment != null) {
+            fragmentManager.beginTransaction().hide(fragment).commit();
         }
     }
 }
