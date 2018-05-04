@@ -4,11 +4,13 @@ import android.support.annotation.NonNull;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.io.Serializable;
+
 /**
  * Created by kevin on 21/04/2018.
  */
 
-public class Store {
+public class Store implements Serializable {
 
     private String name;
     private String subtitle;

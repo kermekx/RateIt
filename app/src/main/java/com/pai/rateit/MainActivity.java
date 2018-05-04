@@ -11,18 +11,23 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import com.pai.rateit.activity.SettingsActivity;
 import com.pai.rateit.controller.account.AccountController;
 import com.pai.rateit.fragment.maps.MapsFragment;
+import com.pai.rateit.fragment.maps.StoreOverviewFragment;
+import com.pai.rateit.model.store.Store;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, MapsFragment.OnFragmentInteractionListener {
+        implements NavigationView.OnNavigationItemSelectedListener,
+        MapsFragment.OnFragmentInteractionListener,
+        StoreOverviewFragment.OnFragmentInteractionListener {
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -114,5 +119,11 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    public boolean onStoreMarkerClicked(Store store) {
+        Log.d("Store clicked", store.getName());
+        return false;
     }
 }

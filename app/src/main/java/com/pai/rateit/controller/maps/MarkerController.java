@@ -12,6 +12,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.pai.rateit.factory.marker.MarkerFactory;
+import com.pai.rateit.fragment.maps.MapsFragment;
 import com.pai.rateit.mapper.store.StoreMapper;
 import com.pai.rateit.model.store.Store;
 import com.pai.rateit.utils.DistanceUtils;
@@ -27,11 +28,15 @@ public class MarkerController implements GoogleMap.OnMarkerClickListener, Google
     public final static double ONE_MILE_LON = 0.0181818181818182;
 
     private MarkerFactory mMarkerFactory;
+    private MapsFragment.OnFragmentInteractionListener mListener;
 
-    public MarkerController(MarkerFactory markerFactory) {
+    public MarkerController(MarkerFactory markerFactory,
+                            MapsFragment.OnFragmentInteractionListener listener) {
         this.mMarkerFactory = markerFactory;
         markerFactory.markerClickListener(this);
         markerFactory.cameraMoveListener(this);
+
+        this.mListener = listener;
     }
 
     public void findNearby(LatLng pos) {
@@ -69,6 +74,9 @@ public class MarkerController implements GoogleMap.OnMarkerClickListener, Google
                 marker.setSnippet(store.getAddress() + " (" + DistanceUtils.metersToString(
                         store.getLatLng(), userLatlng, mMarkerFactory.getContext()) + ")");
             }
+
+            if (mListener != null)
+                return mListener.onStoreMarkerClicked(store);
         }
         return false;
     }

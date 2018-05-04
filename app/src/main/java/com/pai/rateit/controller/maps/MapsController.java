@@ -27,15 +27,17 @@ import java.util.List;
 
 public class MapsController implements OnMapReadyCallback, GoogleMap.OnCameraIdleListener {
 
+    List<Long> loadedChunk = new ArrayList<>();
     private Activity mActivity;
+    private MapsFragment.OnFragmentInteractionListener mListener;
     private GoogleMap mMap;
     private LocationManager mLocationManager;
     private MarkerController mMarkerController;
 
-    List<Long> loadedChunk = new ArrayList<>();
-
-    public MapsController(Activity activity, SupportMapFragment mapFragment) {
+    public MapsController(Activity activity, MapsFragment.OnFragmentInteractionListener listener,
+                          SupportMapFragment mapFragment) {
         mActivity = activity;
+        mListener = listener;
         mLocationManager = (LocationManager) mActivity.getSystemService(Context.LOCATION_SERVICE);
 
         mapFragment.getMapAsync(this);
@@ -45,7 +47,7 @@ public class MapsController implements OnMapReadyCallback, GoogleMap.OnCameraIdl
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMarkerController = new MarkerController(new MarkerFactory().context(mActivity).map(mMap)
-                .locationManager(mLocationManager));
+                .locationManager(mLocationManager), mListener);
         mMap.setOnCameraIdleListener(this);
 
         askPermissionIfRequired(Manifest.permission.ACCESS_FINE_LOCATION,

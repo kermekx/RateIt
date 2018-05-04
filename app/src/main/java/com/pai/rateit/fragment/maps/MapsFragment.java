@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.pai.rateit.R;
 import com.pai.rateit.controller.maps.MapsController;
+import com.pai.rateit.model.store.Store;
 
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
@@ -54,7 +55,7 @@ public class MapsFragment extends Fragment {
                 false);
         unbinder = ButterKnife.bind(this, view);
 
-        mMapsController = new MapsController(getActivity(),
+        mMapsController = new MapsController(getActivity(), mListener,
                 (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map));
 
         return view;
@@ -119,7 +120,7 @@ public class MapsFragment extends Fragment {
     }
 
     public interface OnFragmentInteractionListener {
-
+        public boolean onStoreMarkerClicked(Store store);
     }
 
 }
