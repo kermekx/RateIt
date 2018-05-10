@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.design.widget.NavigationView;
+import android.support.transition.Fade;
 import android.support.transition.Slide;
 import android.support.transition.Transition;
 import android.support.v4.app.Fragment;
@@ -140,7 +141,7 @@ public class MainActivity extends AppCompatActivity
             fragment = StoreOverviewFragment.newInstance(store);
 
             fragment.setEnterTransition(new Slide());
-            fragment.setReturnTransition(new Slide());
+            fragment.setExitTransition(new Fade());
 
             fragmentManager.beginTransaction().replace(R.id.flBottomContent, fragment,
                     StoreOverviewFragment.FRAGMENT_TAG).commit();

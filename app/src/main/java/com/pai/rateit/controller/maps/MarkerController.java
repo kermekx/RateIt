@@ -69,11 +69,11 @@ public class MarkerController implements GoogleMap.OnMarkerClickListener, Google
 
             // Update distance
             LatLng userLatlng = mMarkerFactory.getLastKnownLocation();
-            if (userLatlng != null) {
-                marker.setTitle(store.getName());
-                marker.setSnippet(store.getAddress() + " (" + DistanceUtils.metersToString(
-                        store.getLatLng(), userLatlng, mMarkerFactory.getContext()) + ")");
-            }
+            if (userLatlng != null)
+                store.setDistance(DistanceUtils.metersToString(
+                        store.getLatLng(), userLatlng, mMarkerFactory.getContext()));
+            else
+                store.setDistance(null);
 
             if (mListener != null)
                 return mListener.onStoreMarkerClicked(store);

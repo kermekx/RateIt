@@ -19,6 +19,7 @@ public class Store implements Serializable {
     private double lon;
     private int x;
     private int y;
+    private String distance = null;
 
     public Store() {
 
@@ -93,5 +94,13 @@ public class Store implements Serializable {
 
     public void setY(int y) {
         this.y = y;
+    }
+
+    public String getDistance() {
+        return distance;
+    }
+
+    public void setDistance(String distance) {
+        this.distance = distance;
     }
 }

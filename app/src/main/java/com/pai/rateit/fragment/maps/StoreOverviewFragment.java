@@ -24,6 +24,8 @@ public class StoreOverviewFragment extends Fragment {
     TextView storeNameTextView;
     @BindView(R.id.text_store_subtitle)
     TextView storeSubtitleTextView;
+    @BindView(R.id.text_store_distance)
+    TextView storeDistanceTextView;
     private Unbinder unbinder;
     private Store mStore;
 
@@ -86,6 +88,13 @@ public class StoreOverviewFragment extends Fragment {
 
     public void setStore(Store store) {
         storeNameTextView.setText(store.getName());
+
+        if (store.getDistance() == null)
+            storeDistanceTextView.setVisibility(View.GONE);
+        else {
+            storeDistanceTextView.setVisibility(View.VISIBLE);
+            storeDistanceTextView.setText(" - " + store.getDistance());
+        }
 
         if (store.getSubtitle() == null)
             storeSubtitleTextView.setVisibility(View.GONE);

@@ -75,20 +75,15 @@ public class MarkerFactory {
 
         LatLng userLatlng = getLastKnownLocation();
 
-        Marker marker;
-        if (userLatlng == null)
-            marker = mMap.addMarker(new MarkerOptions()
-                    .position(store.getLatLng())
-                    .title(store.getName())
-                    .snippet(store.getAddress())
-                    .visible(showCursor));
+        Marker marker = mMap.addMarker(new MarkerOptions()
+                .position(store.getLatLng())
+                .visible(showCursor));
+
+        if (userLatlng != null)
+            store.setDistance(DistanceUtils.metersToString(
+                    store.getLatLng(), userLatlng, mContext));
         else
-            marker = mMap.addMarker(new MarkerOptions()
-                    .position(store.getLatLng())
-                    .title(store.getName())
-                    .snippet(store.getAddress() + " (" + DistanceUtils.metersToString(
-                            store.getLatLng(), userLatlng, mContext) + ")")
-                    .visible(showCursor));
+            store.setDistance(null);
 
         marker.setTag(store);
         markers.add(marker);
