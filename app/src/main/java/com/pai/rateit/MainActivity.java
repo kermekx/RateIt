@@ -6,7 +6,6 @@ import android.os.PersistableBundle;
 import android.support.design.widget.NavigationView;
 import android.support.transition.Fade;
 import android.support.transition.Slide;
-import android.support.transition.Transition;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
@@ -14,15 +13,15 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.ViewGroup;
 
 import com.pai.rateit.activity.SettingsActivity;
 import com.pai.rateit.controller.account.AccountController;
 import com.pai.rateit.fragment.maps.MapsFragment;
-import com.pai.rateit.fragment.maps.StoreOverviewFragment;
+import com.pai.rateit.fragment.maps.StoreMarkerInfoFragment;
+import com.pai.rateit.fragment.nearby.StoreOverviewFragment;
+import com.pai.rateit.fragment.nearby.dummy.DummyContent;
 import com.pai.rateit.model.store.Store;
 
 import butterknife.BindView;
@@ -31,7 +30,8 @@ import butterknife.ButterKnife;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         MapsFragment.OnFragmentInteractionListener,
-        StoreOverviewFragment.OnFragmentInteractionListener {
+        StoreMarkerInfoFragment.OnFragmentInteractionListener,
+        StoreOverviewFragment.OnListFragmentInteractionListener {
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -57,9 +57,10 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         if (savedInstanceState == null) {
-            Fragment fragment = MapsFragment.newInstance();
+            Fragment fragment = StoreOverviewFragment.newInstance(1);
             FragmentManager fragmentManager = getSupportFragmentManager();
-            fragmentManager.beginTransaction().replace(R.id.flContent, fragment, MapsFragment.FRAGMENT_TAG).commit();
+            fragmentManager.beginTransaction().replace(R.id.flContent, fragment,
+                    StoreOverviewFragment.FRAGMENT_TAG).commit();
         }
     }
 
@@ -70,8 +71,13 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        Fragment fragment = fragmentManager.findFragmentByTag(StoreMarkerInfoFragment.FRAGMENT_TAG);
+
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
+        } else if (fragment != null && fragment.isVisible()) {
+            fragmentManager.beginTransaction().hide(fragment).commit();
         } else {
             super.onBackPressed();
         }
@@ -95,6 +101,22 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.action_settings) {
             startActivity(new Intent(this, SettingsActivity.class));
             return true;
+        } else if (id == R.id.action_maps) {
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            Fragment fragment = fragmentManager.findFragmentByTag(MapsFragment.FRAGMENT_TAG);
+
+            if (fragment != null && fragment.isVisible())
+                return false;
+            else if (fragment != null) {
+                fragmentManager.beginTransaction().show(fragment).addToBackStack(null).commit();
+                return true;
+            } else {
+                fragment = MapsFragment.newInstance();
+
+                fragmentManager.beginTransaction().replace(R.id.flContent, fragment,
+                        MapsFragment.FRAGMENT_TAG).addToBackStack(null).commit();
+                return true;
+            }
         }
 
         return super.onOptionsItemSelected(item);
@@ -120,7 +142,6 @@ public class MainActivity extends AppCompatActivity
 
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
@@ -128,23 +149,23 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onStoreMarkerClicked(Store store) {
         FragmentManager fragmentManager = getSupportFragmentManager();
-        Fragment fragment = fragmentManager.findFragmentByTag(StoreOverviewFragment.FRAGMENT_TAG);
+        Fragment fragment = fragmentManager.findFragmentByTag(StoreMarkerInfoFragment.FRAGMENT_TAG);
 
         if (fragment != null) {
-            if (fragment instanceof StoreOverviewFragment) {
-                ((StoreOverviewFragment) fragment).setStore(store);
+            if (fragment instanceof StoreMarkerInfoFragment) {
+                ((StoreMarkerInfoFragment) fragment).setStore(store);
                 fragmentManager.beginTransaction().show(fragment).commit();
                 return true;
             }
             return false;
         } else {
-            fragment = StoreOverviewFragment.newInstance(store);
+            fragment = StoreMarkerInfoFragment.newInstance(store);
 
             fragment.setEnterTransition(new Slide());
             fragment.setExitTransition(new Fade());
 
             fragmentManager.beginTransaction().replace(R.id.flBottomContent, fragment,
-                    StoreOverviewFragment.FRAGMENT_TAG).commit();
+                    StoreMarkerInfoFragment.FRAGMENT_TAG).commit();
             return true;
         }
     }
@@ -153,9 +174,14 @@ public class MainActivity extends AppCompatActivity
     public void onMapClicked() {
         FragmentManager fragmentManager = getSupportFragmentManager();
 
-        Fragment fragment = fragmentManager.findFragmentByTag(StoreOverviewFragment.FRAGMENT_TAG);
-        if (fragment != null) {
+        Fragment fragment = fragmentManager.findFragmentByTag(StoreMarkerInfoFragment.FRAGMENT_TAG);
+        if (fragment != null && fragment.isVisible()) {
             fragmentManager.beginTransaction().hide(fragment).commit();
         }
+    }
+
+    @Override
+    public void onListFragmentInteraction(DummyContent.DummyItem item) {
+
     }
 }
