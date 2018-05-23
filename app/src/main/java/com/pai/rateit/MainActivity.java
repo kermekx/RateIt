@@ -117,6 +117,8 @@ public class MainActivity extends AppCompatActivity
                         MapsFragment.FRAGMENT_TAG).addToBackStack(null).commit();
                 return true;
             }
+        }else if (id == R.id.action_search) {
+            return false;
         }
 
         return super.onOptionsItemSelected(item);
